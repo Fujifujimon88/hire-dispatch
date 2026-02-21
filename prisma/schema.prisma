@@ -1,0 +1,325 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════
+// 既存モデル (hire-booking と共有)
+// ══════════════════════════════════════
+
+model User {
+  id                String        @id @default(uuid())
+  email             String        @unique
+  passwordHash      String        @map("password_hash")
+  name              String
+  nameKana          String?       @map("name_kana")
+  phone             String?
+  userType          UserType      @default(INDIVIDUAL) @map("user_type")
+  role              Role          @default(USER)
+  preferredLanguage String        @default("ja") @map("preferred_language")
+  companyId         String?       @map("company_id")
+  company           Company?      @relation(fields: [companyId], references: [id])
+  reservations      Reservation[]
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum UserType {
+  INDIVIDUAL
+  CORPORATE
+}
+
+enum Role {
+  USER
+  CORPORATE_ADMIN
+  ADMIN
+}
+
+model Company {
+  id             String        @id @default(uuid())
+  name           String
+  code           String        @unique
+  billingAddress String?       @map("billing_address")
+  billingEmail   String?       @map("billing_email")
+  contactPerson  String?       @map("contact_person")
+  contactPhone   String?       @map("contact_phone")
+  paymentTerms   Int           @default(30) @map("payment_terms")
+  isActive       Boolean       @default(true) @map("is_active")
+  users          User[]
+  reservations   Reservation[]
+  invoices       Invoice[]
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@map("companies")
+}
+
+model VehicleGrade {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  sortOrder   Int       @default(0) @map("sort_order")
+  vehicles    Vehicle[]
+
+  @@map("vehicle_grades")
+}
+
+model Vehicle {
+  id            String        @id @default(uuid())
+  name          String
+  vehicleType   VehicleType   @map("vehicle_type")
+  gradeId       String        @map("grade_id")
+  grade         VehicleGrade  @relation(fields: [gradeId], references: [id])
+  plateNumber   String?       @map("plate_number")
+  maxPassengers Int           @map("max_passengers")
+  maxLuggage    Int           @map("max_luggage")
+  basePrice     Int           @map("base_price")
+  imageUrl      String?       @map("image_url")
+  amenities     String[]      @default([])
+  isActive      Boolean       @default(true) @map("is_active")
+  reservations  Reservation[]
+  dispatches    Dispatch[]
+
+  @@map("vehicles")
+}
+
+enum VehicleType {
+  SEDAN
+  MINIVAN
+  LIMOUSINE
+}
+
+model Driver {
+  id             String               @id @default(uuid())
+  name           String
+  phone          String?
+  licenseNumber  String?              @map("license_number")
+  languages      String[]             @default(["ja"])
+  isActive       Boolean              @default(true) @map("is_active")
+  reservations   Reservation[]
+  availabilities DriverAvailability[]
+  dispatches     Dispatch[]
+  createdAt      DateTime             @default(now()) @map("created_at")
+
+  @@map("drivers")
+}
+
+model DriverAvailability {
+  id        String   @id @default(uuid())
+  driverId  String   @map("driver_id")
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  timeSlots String[] @default([]) @map("time_slots")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([driverId, date])
+  @@index([driverId])
+  @@index([date])
+  @@map("driver_availabilities")
+}
+
+model Reservation {
+  id                   String            @id @default(uuid())
+  orderNumber          String            @unique @map("order_number")
+  userId               String            @map("user_id")
+  user                 User              @relation(fields: [userId], references: [id])
+  companyId            String?           @map("company_id")
+  company              Company?          @relation(fields: [companyId], references: [id])
+  vehicleId            String            @map("vehicle_id")
+  vehicle              Vehicle           @relation(fields: [vehicleId], references: [id])
+  driverId             String?           @map("driver_id")
+  driver               Driver?           @relation(fields: [driverId], references: [id])
+  pickupLocation       String            @map("pickup_location")
+  pickupPlaceId        String?           @map("pickup_place_id")
+  pickupLat            Decimal?          @map("pickup_lat")
+  pickupLng            Decimal?          @map("pickup_lng")
+  dropoffLocation      String            @map("dropoff_location")
+  dropoffPlaceId       String?           @map("dropoff_place_id")
+  dropoffLat           Decimal?          @map("dropoff_lat")
+  dropoffLng           Decimal?          @map("dropoff_lng")
+  pickupDatetime       DateTime          @map("pickup_datetime")
+  passengerCount       Int               @map("passenger_count")
+  luggageCount         Int               @default(0) @map("luggage_count")
+  estimatedDistanceKm  Decimal?          @map("estimated_distance_km")
+  estimatedDurationMin Int?              @map("estimated_duration_min")
+  price                Int
+  status               ReservationStatus @default(PENDING)
+  notes                String?
+  language             String            @default("ja")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  invoiceItems         InvoiceItem[]
+
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([companyId])
+  @@index([pickupDatetime])
+  @@index([status])
+  @@map("reservations")
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+model Invoice {
+  id                 String        @id @default(uuid())
+  invoiceNumber      String        @unique @map("invoice_number")
+  companyId          String        @map("company_id")
+  company            Company       @relation(fields: [companyId], references: [id])
+  billingPeriodStart DateTime      @map("billing_period_start") @db.Date
+  billingPeriodEnd   DateTime      @map("billing_period_end") @db.Date
+  subtotal           Int
+  tax                Int
+  total              Int
+  status             InvoiceStatus @default(DRAFT)
+  issuedAt           DateTime?     @map("issued_at")
+  dueDate            DateTime?     @map("due_date") @db.Date
+  items              InvoiceItem[]
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  @@index([companyId])
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  category  String?
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("locations")
+}
+
+model InvoiceItem {
+  id            String      @id @default(uuid())
+  invoiceId     String      @map("invoice_id")
+  invoice       Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  reservationId String      @map("reservation_id")
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  description   String
+  amount        Int
+
+  @@map("invoice_items")
+}
+
+// ══════════════════════════════════════
+// 新規モデル (hire-dispatch 固有)
+// ══════════════════════════════════════
+
+// ── 手配書 ──
+model Dispatch {
+  id               String         @id @default(uuid())
+  orderNumber      String         @unique @map("order_number")
+  personInCharge   String         @map("person_in_charge")
+  arrangementMonth String?        @map("arrangement_month")
+  arrangementDate  DateTime       @map("arrangement_date") @db.Date
+  pickupLocation   String         @map("pickup_location")
+  pickupTime       DateTime       @map("pickup_time")
+  stopover         String?
+  dropoffLocation  String         @map("dropoff_location")
+  returnTime       DateTime?      @map("return_time")
+  customerName     String         @map("customer_name")
+  customerCount    Int?           @map("customer_count")
+  customerContact  String?        @map("customer_contact")
+  vehicleId        String?        @map("vehicle_id")
+  vehicle          Vehicle?       @relation(fields: [vehicleId], references: [id])
+  driverId         String?        @map("driver_id")
+  driver           Driver?        @relation(fields: [driverId], references: [id])
+  notes            String?
+  status           DispatchStatus @default(CONFIRMED)
+  calendarEventId  String?        @map("calendar_event_id")
+
+  // Sheets / PDF / Email 連携フィールド
+  dispatchType           DispatchType @default(OTHER) @map("dispatch_type")
+  sheetRowNumber         Int?         @map("sheet_row_number")
+  pdfFileId              String?      @map("pdf_file_id")
+  pdfUrl                 String?      @map("pdf_url")
+  budgetPriceTaxIncluded Int?         @map("budget_price_tax_included")
+  priceComment           String?      @map("price_comment")
+  driverInfo             String?      @map("driver_info")
+  internalNotifyEmails   String[]     @default([]) @map("internal_notify_emails")
+  clientNotifyEmails     String[]     @default([]) @map("client_notify_emails")
+
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  logs             DispatchLog[]
+
+  @@index([orderNumber])
+  @@index([arrangementDate])
+  @@index([status])
+  @@map("dispatches")
+}
+
+enum DispatchType {
+  BOJ
+  OTHER
+}
+
+enum DispatchStatus {
+  CONFIRMED
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+// ── 手配書 変更履歴 ──
+model DispatchLog {
+  id          String   @id @default(uuid())
+  dispatchId  String   @map("dispatch_id")
+  dispatch    Dispatch @relation(fields: [dispatchId], references: [id], onDelete: Cascade)
+  action      String   // "CREATE" | "UPDATE" | "DELETE"
+  beforeData  Json?    @map("before_data")
+  afterData   Json?    @map("after_data")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([dispatchId])
+  @@index([createdAt])
+  @@map("dispatch_logs")
+}
+
+// ── 相談案件 ──
+model Consultation {
+  id                  String             @id @default(uuid())
+  customerName        String             @map("customer_name")
+  contactInfo         String?            @map("contact_info")
+  preferredDatetime   DateTime?          @map("preferred_datetime")
+  consultationDetails String?            @map("consultation_details") @db.Text
+  status              ConsultationStatus @default(CONSULTING)
+  assignedTo          String?            @map("assigned_to")
+  notes               String?            @db.Text
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("consultations")
+}
+
+enum ConsultationStatus {
+  CONSULTING
+  ESTIMATING
+  CONFIRMED
+  CANCELLED
+}
