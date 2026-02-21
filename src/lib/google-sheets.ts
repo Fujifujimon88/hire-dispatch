@@ -34,9 +34,10 @@ export async function appendDispatchRow(
     dispatchType === "BOJ" ? SHEET_NAMES.BOJ_DATA : SHEET_NAMES.OTHER_DATA;
   const lastCol = dispatchType === "BOJ" ? "T" : "Q";
 
+  const range = `${sheetName}!A:${lastCol}`;
   const response = await sheets.spreadsheets.values.append({
     spreadsheetId: getSpreadsheetId(),
-    range: `'${sheetName}'!A:${lastCol}`,
+    range,
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [rowData] },
   });
@@ -60,9 +61,10 @@ export async function updateDispatchRow(
     dispatchType === "BOJ" ? SHEET_NAMES.BOJ_DATA : SHEET_NAMES.OTHER_DATA;
   const lastCol = dispatchType === "BOJ" ? "T" : "Q";
 
+  const range = `${sheetName}!A${rowNumber}:${lastCol}${rowNumber}`;
   await sheets.spreadsheets.values.update({
     spreadsheetId: getSpreadsheetId(),
-    range: `'${sheetName}'!A${rowNumber}:${lastCol}${rowNumber}`,
+    range,
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [rowData] },
   });
@@ -83,7 +85,7 @@ export async function writeToTemplateSheet(
   const data = Object.entries(cellDataMap)
     .filter(([, value]) => value !== null && value !== undefined)
     .map(([cell, value]) => ({
-      range: `'${sheetName}'!${cell}`,
+      range: `${sheetName}!${cell}`,
       values: [[value]],
     }));
 
@@ -134,9 +136,10 @@ export async function getNextNo(
   const sheetName =
     dispatchType === "BOJ" ? SHEET_NAMES.BOJ_DATA : SHEET_NAMES.OTHER_DATA;
 
+  const range = `${sheetName}!A:A`;
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: `'${sheetName}'!A:A`,
+    range,
   });
 
   const values = response.data.values;

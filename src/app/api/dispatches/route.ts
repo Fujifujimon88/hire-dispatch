@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       driverId: body.driverId || null,
       notes: body.notes || null,
       status: "CONFIRMED",
-      dispatchType: body.dispatchType || "OTHER",
+      dispatchType: body.dispatchType || "BOJ",
       budgetPriceTaxIncluded: body.budgetPriceTaxIncluded ? parseInt(body.budgetPriceTaxIncluded) : null,
       priceComment: body.priceComment || null,
       driverInfo: body.driverInfo || null,

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Vehicle, Dispatch, DispatchForm as DForm } from "@/lib/types";
-import { generateDispatchOrderNumber } from "@/lib/utils";
 import {
   FileText, MapPin, Users, Car, DollarSign, Mail,
   CalendarPlus, RotateCcw, Loader2,
@@ -20,7 +19,7 @@ const empty: DForm = {
   pickupLocation: "", pickupTime: "", stopover: "", dropoffLocation: "", returnTime: "",
   customerName: "", customerCount: 1, customerContact: "",
   vehicleId: "", notes: "",
-  dispatchType: "OTHER",
+  dispatchType: "BOJ",
   budgetPriceTaxIncluded: "",
   priceComment: "",
   driverInfo: "",
@@ -100,7 +99,7 @@ export function DispatchForm({
         customerContact: editItem.customerContact || "",
         vehicleId: editItem.vehicleId || "",
         notes: editItem.notes || "",
-        dispatchType: editItem.dispatchType || "OTHER",
+        dispatchType: editItem.dispatchType || "BOJ",
         budgetPriceTaxIncluded: editItem.budgetPriceTaxIncluded ? String(editItem.budgetPriceTaxIncluded) : "",
         priceComment: editItem.priceComment || "",
         driverInfo: editItem.driverInfo || "",
@@ -108,7 +107,7 @@ export function DispatchForm({
         clientNotifyEmails: editItem.clientNotifyEmails?.join(", ") || NOTIFY_CLIENT_DEFAULT,
       });
     } else {
-      setF({ ...empty, orderNumber: generateDispatchOrderNumber() });
+      setF({ ...empty });
     }
   }, [editItem]);
 
@@ -116,7 +115,7 @@ export function DispatchForm({
 
   async function handleSubmit() {
     setErr(""); setSuccess("");
-    if (!f.personInCharge || !f.arrangementDate || !f.pickupLocation || !f.pickupTime || !f.dropoffLocation || !f.customerName) {
+    if (!f.orderNumber || !f.personInCharge || !f.arrangementDate || !f.pickupLocation || !f.pickupTime || !f.dropoffLocation || !f.customerName) {
       setErr("必須項目を入力してください"); return;
     }
 
@@ -166,19 +165,9 @@ export function DispatchForm({
         results.push("シート同期失敗");
       }
 
-      // PDF generation
-      try {
-        const pdfRes = await fetch(`/api/dispatches/${dispatch.id}/generate-pdf`, { method: "POST" });
-        if (!pdfRes.ok) throw new Error("PDF生成失敗");
-        results.push("PDF生成済");
-      } catch (pdfError) {
-        console.error("PDF generation failed:", pdfError);
-        results.push("PDF生成失敗");
-      }
-
       setSuccess(results.join(" / "));
 
-      if (!editItem) setF({ ...empty, orderNumber: generateDispatchOrderNumber() });
+      if (!editItem) setF({ ...empty });
       onSaved();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "エラーが発生しました");
@@ -199,8 +188,8 @@ export function DispatchForm({
         {/* 基本情報 */}
         <SectionHeader icon={<FileText className="w-4 h-4" />} label="基本情報" />
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-          <Field label="注文番号">
-            <Input value={f.orderNumber} onChange={e => set({ orderNumber: e.target.value })} className="bg-gray-50 text-gray-500 font-mono text-sm" />
+          <Field label="注文番号" required>
+            <Input value={f.orderNumber} onChange={e => set({ orderNumber: e.target.value })} placeholder="JP26-0295" className="font-mono text-sm" />
           </Field>
           <Field label="担当者" required>
             <Input value={f.personInCharge} onChange={e => set({ personInCharge: e.target.value })} placeholder="担当者名" />
@@ -214,8 +203,8 @@ export function DispatchForm({
               onChange={e => set({ dispatchType: e.target.value as "BOJ" | "OTHER" })}
               className={selectClass}
             >
-              <option value="OTHER">その他</option>
               <option value="BOJ">BOJ様用</option>
+              <option value="OTHER">その他</option>
             </select>
           </Field>
         </div>
@@ -332,7 +321,7 @@ export function DispatchForm({
               <RotateCcw className="w-4 h-4" /> キャンセル
             </Button>
           )}
-          <Button variant="outline" onClick={() => { setF({ ...empty, orderNumber: generateDispatchOrderNumber() }); setErr(""); setSuccess(""); }} className="gap-1.5">
+          <Button variant="outline" onClick={() => { setF({ ...empty }); setErr(""); setSuccess(""); }} className="gap-1.5">
             <RotateCcw className="w-4 h-4" /> クリア
           </Button>
           <Button variant="gold" onClick={handleSubmit} disabled={submitting} className="gap-1.5 px-6">

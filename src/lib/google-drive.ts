@@ -85,6 +85,7 @@ export async function exportSheetAsPdf(
       body: Readable.from(pdfBuffer),
     },
     fields: "id, webViewLink",
+    supportsAllDrives: true,
   });
 
   return {
@@ -105,11 +106,12 @@ export async function downloadPdfFromDrive(
   const fileMeta = await drive.files.get({
     fileId,
     fields: "name",
+    supportsAllDrives: true,
   });
 
   // ファイル内容取得
   const response = await drive.files.get(
-    { fileId, alt: "media" },
+    { fileId, alt: "media", supportsAllDrives: true },
     { responseType: "arraybuffer" }
   );
 

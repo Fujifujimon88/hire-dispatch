@@ -48,6 +48,17 @@ function formatDateForSheet(date: Date | string): string {
   return `${y}/${m}/${day}`;
 }
 
+function formatDateJPLong(date: Date | string): string {
+  // "2025年12月28日" 形式
+  const d = new Date(date);
+  return d.toLocaleDateString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 /**
  * BOJ様用手配表の行データ (A-T列)
  */
@@ -117,22 +128,23 @@ export function mapDispatchToBOJTemplate(
 ): Record<string, string | number> {
   return {
     B3: no, // NO
-    E2: dispatch.orderNumber, // 注文番号
-    E30: dispatch.personInCharge, // 担当者
-    E31: formatDateForSheet(dispatch.arrangementDate), // 手配日
-    E5: dispatch.pickupLocation, // お迎え場所
+    E2: dispatch.orderNumber, // 受注No
+    E3: formatDateJPLong(dispatch.arrangementDate), // お迎え日
     E4: formatTimeJP(dispatch.pickupTime), // お迎え時間
-    E12: dispatch.stopover || "", // 立寄り
-    E21: dispatch.dropoffLocation, // 送り場所
-    E20: dispatch.returnTime ? formatTimeJP(dispatch.returnTime) : "", // 帰着時間
-    K3: dispatch.customerName, // お客様
-    K4: dispatch.customerCount ?? "", // 人数
+    E5: dispatch.pickupLocation, // お出迎え場所
+    D13: dispatch.notes || "", // 備考
+    E12: dispatch.stopover || "", // 立ち寄り場所
+    E20: dispatch.returnTime ? formatTimeJP(dispatch.returnTime) : "", // 送り時間
+    E21: dispatch.dropoffLocation, // お送り場所
+    E30: dispatch.personInCharge, // ご担当者様
+    E31: formatDateForSheet(dispatch.arrangementDate), // 手配日
+    K3: dispatch.customerName, // お申込み者名
+    K4: dispatch.customerCount ?? "", // 先方人数
     P5: dispatch.customerContact || "", // お客様連絡先
     P18: dispatch.vehicle?.name || "", // 車種
-    P20: dispatch.vehicle?.plateNumber || "", // 車両番号
-    P22: dispatch.driver?.name || "", // ドライバー
+    P20: dispatch.vehicle?.plateNumber || "", // 車両No
+    P22: dispatch.driver?.name || "", // 運転者
     P24: dispatch.driverInfo || "", // 車両番号・ドライバー・携帯
-    D13: dispatch.notes || "", // 備考
   };
 }
 
@@ -146,20 +158,21 @@ export function mapDispatchToOtherTemplate(
 ): Record<string, string | number> {
   return {
     B3: no, // NO
-    E2: dispatch.orderNumber, // 注文番号
-    E30: dispatch.personInCharge, // 担当者
-    E31: formatDateForSheet(dispatch.arrangementDate), // 手配日
-    E5: dispatch.pickupLocation, // お迎え場所
+    E2: dispatch.orderNumber, // 受注No
+    E3: formatDateJPLong(dispatch.arrangementDate), // お迎え日
     E4: formatTimeJP(dispatch.pickupTime), // お迎え時間
-    E12: dispatch.stopover || "", // 立寄り
-    E21: dispatch.dropoffLocation, // 送り場所
-    E20: dispatch.returnTime ? formatTimeJP(dispatch.returnTime) : "", // 帰着時間
-    K3: dispatch.customerName, // お客様
-    K4: dispatch.customerCount ?? "", // 人数
+    E5: dispatch.pickupLocation, // お出迎え場所
+    E10: dispatch.notes || "", // 備考
+    E12: dispatch.stopover || "", // 立ち寄り場所
+    E20: dispatch.returnTime ? formatTimeJP(dispatch.returnTime) : "", // 送り時間
+    E21: dispatch.dropoffLocation, // お送り場所
+    E30: dispatch.personInCharge, // ご担当者様
+    E31: formatDateForSheet(dispatch.arrangementDate), // 手配日
+    K3: dispatch.customerName, // お申込み者名
+    K4: dispatch.customerCount ?? "", // 先方人数
     P5: dispatch.customerContact || "", // お客様連絡先
     P18: dispatch.vehicle?.name || "", // 車種
     P20: dispatch.driverInfo || "", // 車両番号・ドライバー・携帯
-    D13: dispatch.notes || "", // 備考
   };
 }
 
