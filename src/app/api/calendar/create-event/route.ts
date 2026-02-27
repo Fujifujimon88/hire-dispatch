@@ -14,6 +14,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Dispatch not found" }, { status: 404 });
   }
 
+  // 同じ注文番号で既にカレンダー登録済みの場合はスキップ
+  if (dispatch.calendarEventId) {
+    return NextResponse.json({
+      eventId: dispatch.calendarEventId,
+      skipped: true,
+      message: "この注文番号は既にカレンダーに登録済みです",
+    });
+  }
+
   try {
     const eventId = await createCalendarEvent({
       orderNumber: dispatch.orderNumber,

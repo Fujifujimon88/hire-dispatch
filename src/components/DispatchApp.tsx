@@ -75,6 +75,7 @@ export function DispatchApp() {
       stopover: null,
       dropoffLocation: "",
       returnTime: null,
+      vehicleCount: null,
       customerName: c.customerName,
       customerCount: null,
       customerContact: c.contactInfo,

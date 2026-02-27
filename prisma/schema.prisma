@@ -240,6 +240,7 @@ model Dispatch {
   stopover         String?
   dropoffLocation  String         @map("dropoff_location")
   returnTime       DateTime?      @map("return_time")
+  vehicleCount     Int?           @default(1) @map("vehicle_count")
   customerName     String         @map("customer_name")
   customerCount    Int?           @map("customer_count")
   customerContact  String?        @map("customer_contact")

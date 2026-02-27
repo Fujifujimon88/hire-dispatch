@@ -35,6 +35,7 @@ export async function POST(req: Request) {
       stopover: body.stopover || null,
       dropoffLocation: body.dropoffLocation,
       returnTime: body.returnTime ? new Date(`${body.arrangementDate}T${body.returnTime}:00+09:00`) : null,
+      vehicleCount: body.vehicleCount ? parseInt(body.vehicleCount) : 1,
       customerName: body.customerName,
       customerCount: body.customerCount ? parseInt(body.customerCount) : null,
       customerContact: body.customerContact || null,

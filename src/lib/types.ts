@@ -31,6 +31,7 @@ export type Dispatch = {
   stopover: string | null;
   dropoffLocation: string;
   returnTime: string | null;
+  vehicleCount: number | null;
   customerName: string;
   customerCount: number | null;
   customerContact: string | null;
@@ -77,13 +78,14 @@ export type DispatchForm = {
   stopover: string;
   dropoffLocation: string;
   returnTime: string;
+  vehicleCount: number;
   customerName: string;
   customerCount: number;
   customerContact: string;
   vehicleId: string;
   notes: string;
   // Sheets / PDF / Email 連携
-  dispatchType: "BOJ" | "OTHER";
+  dispatchType: "BOJ" | "OTHER" | "";
   budgetPriceTaxIncluded: string;
   priceComment: string;
   driverInfo: string;

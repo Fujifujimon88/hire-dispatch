@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Vehicle, Dispatch, DispatchForm as DForm } from "@/lib/types";
 import {
-  FileText, MapPin, Users, Car, DollarSign, Mail,
-  CalendarPlus, RotateCcw, Loader2,
+  FileText, MapPin, Users, Car, Mail,
+  CalendarPlus, RotateCcw, Loader2, Copy,
 } from "lucide-react";
 
 const NOTIFY_INTERNAL_DEFAULT = process.env.NEXT_PUBLIC_NOTIFY_INTERNAL_DEFAULT || "";
@@ -17,6 +17,7 @@ const NOTIFY_CLIENT_DEFAULT = process.env.NEXT_PUBLIC_NOTIFY_CLIENT_DEFAULT || "
 const empty: DForm = {
   orderNumber: "", personInCharge: "", arrangementDate: "",
   pickupLocation: "", pickupTime: "", stopover: "", dropoffLocation: "", returnTime: "",
+  vehicleCount: 1,
   customerName: "", customerCount: 1, customerContact: "",
   vehicleId: "", notes: "",
   dispatchType: "BOJ",
@@ -80,6 +81,7 @@ export function DispatchForm({
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
   const [success, setSuccess] = useState("");
+  const [lastSaved, setLastSaved] = useState<DForm | null>(null);
 
   const timeOptions = useMemo(() => generateTimeOptions(), []);
 
@@ -94,6 +96,7 @@ export function DispatchForm({
         stopover: editItem.stopover || "",
         dropoffLocation: editItem.dropoffLocation,
         returnTime: editItem.returnTime ? new Date(editItem.returnTime).toTimeString().slice(0, 5) : "",
+        vehicleCount: editItem.vehicleCount || 1,
         customerName: editItem.customerName,
         customerCount: editItem.customerCount || 1,
         customerContact: editItem.customerContact || "",
@@ -149,7 +152,8 @@ export function DispatchForm({
           body: JSON.stringify({ dispatchId: dispatch.id }),
         });
         if (!calRes.ok) throw new Error("カレンダー登録に失敗");
-        results.push("カレンダー登録済");
+        const calData = await calRes.json();
+        results.push(calData.skipped ? "カレンダー登録済（重複スキップ）" : "カレンダー登録済");
       } catch (calError) {
         console.error("Calendar operation failed:", calError);
         results.push("カレンダー登録失敗");
@@ -167,7 +171,10 @@ export function DispatchForm({
 
       setSuccess(results.join(" / "));
 
-      if (!editItem) setF({ ...empty });
+      if (!editItem) {
+        setLastSaved({ ...f });
+        setF({ ...empty });
+      }
       onSaved();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "エラーが発生しました");
@@ -180,9 +187,21 @@ export function DispatchForm({
     <Card className="overflow-hidden animate-fade-in-up">
       <div className="h-[3px] bg-[linear-gradient(90deg,#b8963e,#d4af5e,#b8963e)]" />
       <div className="p-5 md:p-7">
-        <h3 className="text-lg font-bold font-serif text-navy mb-1">
-          {editItem ? "手配書を編集" : "確定案件 - 新規手配書"}
-        </h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-bold font-serif text-navy">
+            {editItem ? "手配書を編集" : "確定案件 - 新規手配書"}
+          </h3>
+          {!editItem && lastSaved && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setF({ ...lastSaved }); setErr(""); setSuccess(""); }}
+              className="gap-1.5 text-xs"
+            >
+              <Copy className="w-3.5 h-3.5" /> 前回の登録内容をコピー
+            </Button>
+          )}
+        </div>
         <p className="text-xs text-gray-400 mb-6">必須項目 (<span className="text-red-500">*</span>) を入力してください</p>
 
         {/* 基本情報 */}
@@ -196,16 +215,6 @@ export function DispatchForm({
           </Field>
           <Field label="手配日" required>
             <Input type="date" value={f.arrangementDate} onChange={e => set({ arrangementDate: e.target.value })} />
-          </Field>
-          <Field label="手配種別">
-            <select
-              value={f.dispatchType}
-              onChange={e => set({ dispatchType: e.target.value as "BOJ" | "OTHER" })}
-              className={selectClass}
-            >
-              <option value="BOJ">BOJ様用</option>
-              <option value="OTHER">その他</option>
-            </select>
           </Field>
         </div>
 
@@ -244,6 +253,9 @@ export function DispatchForm({
                 <option key={t} value={t}>{formatTimeLabel(t)}</option>
               ))}
             </select>
+          </Field>
+          <Field label="台数">
+            <Input type="number" min={1} max={99} value={f.vehicleCount} onChange={e => set({ vehicleCount: +e.target.value })} />
           </Field>
         </div>
 
@@ -288,16 +300,6 @@ export function DispatchForm({
           </Field>
         </div>
 
-        {/* 料金情報 */}
-        <SectionHeader icon={<DollarSign className="w-4 h-4" />} label="料金情報" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          <Field label="予算価格（税込）">
-            <Input type="number" value={f.budgetPriceTaxIncluded} onChange={e => set({ budgetPriceTaxIncluded: e.target.value })} placeholder="例: 50000" />
-          </Field>
-          <Field label="価格コメント">
-            <Input value={f.priceComment} onChange={e => set({ priceComment: e.target.value })} placeholder="価格に関する備考" />
-          </Field>
-        </div>
 
         {/* メール通知設定 */}
         <SectionHeader icon={<Mail className="w-4 h-4" />} label="メール通知設定" />

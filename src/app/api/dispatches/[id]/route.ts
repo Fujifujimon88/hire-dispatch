@@ -33,6 +33,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   if (body.returnTime !== undefined && body.arrangementDate) {
     data.returnTime = body.returnTime ? new Date(`${body.arrangementDate}T${body.returnTime}:00+09:00`) : null;
   }
+  if (body.vehicleCount !== undefined) data.vehicleCount = body.vehicleCount ? parseInt(body.vehicleCount) : 1;
   if (body.customerName !== undefined) data.customerName = body.customerName;
   if (body.customerCount !== undefined) data.customerCount = body.customerCount ? parseInt(body.customerCount) : null;
   if (body.customerContact !== undefined) data.customerContact = body.customerContact || null;
