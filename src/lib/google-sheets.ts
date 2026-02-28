@@ -127,6 +127,34 @@ export async function getSheetGid(
 }
 
 /**
+ * データシートからNO.で行を検索（手配管理票用）
+ */
+export async function readDispatchRowByNo(
+  dispatchType: "BOJ" | "OTHER",
+  no: number
+): Promise<(string | null)[] | null> {
+  const sheets = getSheetsClient();
+  const sheetName =
+    dispatchType === "BOJ" ? SHEET_NAMES.BOJ_DATA : SHEET_NAMES.OTHER_DATA;
+  const lastCol = dispatchType === "BOJ" ? "T" : "Q";
+
+  const range = `${sheetName}!A:${lastCol}`;
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: getSpreadsheetId(),
+    range,
+  });
+
+  const rows = response.data.values;
+  if (!rows) return null;
+
+  const matchingRow = rows.find(
+    (row) => String(row[0]) === String(no)
+  );
+
+  return matchingRow || null;
+}
+
+/**
  * データシートの次のNO.を取得（GASの getNextNo 相当）
  */
 export async function getNextNo(

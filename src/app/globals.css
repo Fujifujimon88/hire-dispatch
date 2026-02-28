@@ -101,3 +101,45 @@
     }
   }
 }
+
+/* ===== 手配管理票 印刷用スタイル ===== */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  #management-sheet-print-area {
+    width: 100% !important;
+  }
+
+  #management-sheet-print-area table {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #management-sheet-print-area input,
+  #management-sheet-print-area textarea,
+  #management-sheet-print-area select {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 2px !important;
+  }
+
+  /* 白い背景カード部分のシャドウ/角丸を除去 */
+  .print\\:shadow-none { box-shadow: none !important; }
+  .print\\:p-0 { padding: 0 !important; }
+  .print\\:rounded-none { border-radius: 0 !important; }
+}

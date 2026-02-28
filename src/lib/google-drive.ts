@@ -95,6 +95,37 @@ export async function exportSheetAsPdf(
 }
 
 /**
+ * PDFバッファをGoogle Driveにアップロード（手配管理票用）
+ */
+export async function uploadPdfToDrive(
+  pdfBuffer: Buffer,
+  fileName: string,
+  dispatchType: "BOJ" | "OTHER"
+): Promise<{ fileId: string; webViewLink: string }> {
+  const drive = getDriveClient();
+  const folderId = getFolderId(dispatchType);
+
+  const file = await drive.files.create({
+    requestBody: {
+      name: fileName,
+      mimeType: "application/pdf",
+      parents: [folderId],
+    },
+    media: {
+      mimeType: "application/pdf",
+      body: Readable.from(pdfBuffer),
+    },
+    fields: "id, webViewLink",
+    supportsAllDrives: true,
+  });
+
+  return {
+    fileId: file.data.id!,
+    webViewLink: file.data.webViewLink!,
+  };
+}
+
+/**
  * Google DriveからPDFファイルをダウンロード（メール添付用）
  */
 export async function downloadPdfFromDrive(

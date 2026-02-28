@@ -11,6 +11,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // メールアドレス形式チェック
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+
+    // パスワードポリシー: 8文字以上
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    }
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
@@ -36,6 +47,7 @@ export async function POST(req: Request) {
       user: { id: user.id, email: user.email, name: user.name, role: user.role, userType: user.userType },
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("Registration error:", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -87,6 +87,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(reservation, { status: 201 });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("Reservation creation error:", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
-const SECRET = process.env.NEXTAUTH_SECRET || "dev-secret";
+const SECRET = process.env.NEXTAUTH_SECRET;
+if (!SECRET) throw new Error("NEXTAUTH_SECRET environment variable must be set");
 
 export interface TokenPayload {
   userId: string;
@@ -11,12 +13,12 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, SECRET!, { expiresIn: "24h" });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, SECRET) as TokenPayload;
+    return jwt.verify(token, SECRET!) as TokenPayload;
   } catch {
     return null;
   }
@@ -48,11 +50,11 @@ export async function getUserFromRequest(req: Request) {
 export function generateOrderNumber(): string {
   const now = new Date();
   const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-  const seq = String(Math.floor(Math.random() * 99999) + 1).padStart(5, "0");
+  const seq = String(crypto.randomInt(1, 100000)).padStart(5, "0");
   return `HY-${date}-${seq}`;
 }
 
 export function generateInvoiceNumber(yearMonth: string): string {
-  const seq = String(Math.floor(Math.random() * 99999) + 1).padStart(5, "0");
+  const seq = String(crypto.randomInt(1, 100000)).padStart(5, "0");
   return `INV-${yearMonth}-${seq}`;
 }
