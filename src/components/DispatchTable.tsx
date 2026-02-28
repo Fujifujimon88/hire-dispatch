@@ -329,30 +329,6 @@ export function DispatchTable({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
-                        {d.calendarEventId && (
-                          <span title="カレンダー登録済" className="text-green-500">
-                            <Calendar className="w-3.5 h-3.5" />
-                          </span>
-                        )}
-                        <Button
-                          variant="ghost" size="sm"
-                          onClick={() => handleGeneratePdf(d)}
-                          disabled={pdfLoading === d.id}
-                          className="h-7 w-7 p-0 text-orange-500 hover:text-orange-700"
-                          title="PDF生成"
-                        >
-                          {pdfLoading === d.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                        </Button>
-                        {d.pdfUrl && (
-                          <a href={d.pdfUrl} target="_blank" rel="noopener noreferrer" title="PDF表示">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-blue-500 hover:text-blue-700">
-                              <FileText className="w-3.5 h-3.5" />
-                            </Button>
-                          </a>
-                        )}
-                        <Button variant="ghost" size="sm" onClick={() => setNotifyDispatch(d)} className="h-7 w-7 p-0 text-emerald-500 hover:text-emerald-700" title="メール送信">
-                          <Mail className="w-3.5 h-3.5" />
-                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => setLogDispatch(d)} className="h-7 w-7 p-0 text-gray-400 hover:text-gray-700" title="変更履歴">
                           <History className="w-3.5 h-3.5" />
                         </Button>

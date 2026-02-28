@@ -22,45 +22,51 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const dispatch = await prisma.dispatch.create({
-    data: {
-      orderNumber: body.orderNumber || generateDispatchOrderNumber(),
-      personInCharge: body.personInCharge,
-      arrangementMonth: body.arrangementMonth || null,
-      arrangementDate: new Date(body.arrangementDate),
-      pickupLocation: body.pickupLocation,
-      pickupTime: new Date(`${body.arrangementDate}T${body.pickupTime}:00+09:00`),
-      stopover: body.stopover || null,
-      dropoffLocation: body.dropoffLocation,
-      returnTime: body.returnTime ? new Date(`${body.arrangementDate}T${body.returnTime}:00+09:00`) : null,
-      vehicleCount: body.vehicleCount ? parseInt(body.vehicleCount) : 1,
-      customerName: body.customerName,
-      customerCount: body.customerCount ? parseInt(body.customerCount) : null,
-      customerContact: body.customerContact || null,
-      vehicleId: body.vehicleId || null,
-      driverId: body.driverId || null,
-      notes: body.notes || null,
-      status: "CONFIRMED",
-      dispatchType: body.dispatchType || "BOJ",
-      budgetPriceTaxIncluded: body.budgetPriceTaxIncluded ? parseInt(body.budgetPriceTaxIncluded) : null,
-      priceComment: body.priceComment || null,
-      driverInfo: body.driverInfo || null,
-      internalNotifyEmails: body.internalNotifyEmails || [],
-      clientNotifyEmails: body.clientNotifyEmails || [],
-    },
-    include: { vehicle: true, driver: true },
-  });
+    const dispatch = await prisma.dispatch.create({
+      data: {
+        orderNumber: body.orderNumber || generateDispatchOrderNumber(),
+        personInCharge: body.personInCharge,
+        arrangementMonth: body.arrangementMonth || null,
+        arrangementDate: new Date(body.arrangementDate),
+        pickupLocation: body.pickupLocation,
+        pickupTime: new Date(`${body.arrangementDate}T${body.pickupTime}:00+09:00`),
+        stopover: body.stopover || null,
+        dropoffLocation: body.dropoffLocation,
+        returnTime: body.returnTime ? new Date(`${body.arrangementDate}T${body.returnTime}:00+09:00`) : null,
+        vehicleCount: body.vehicleCount ? parseInt(body.vehicleCount) : 1,
+        customerName: body.customerName,
+        customerCount: body.customerCount ? parseInt(body.customerCount) : null,
+        customerContact: body.customerContact || null,
+        vehicleId: body.vehicleId || null,
+        driverId: body.driverId || null,
+        notes: body.notes || null,
+        status: "CONFIRMED",
+        dispatchType: body.dispatchType || "BOJ",
+        budgetPriceTaxIncluded: body.budgetPriceTaxIncluded ? parseInt(body.budgetPriceTaxIncluded) : null,
+        priceComment: body.priceComment || null,
+        driverInfo: body.driverInfo || null,
+        internalNotifyEmails: body.internalNotifyEmails || [],
+        clientNotifyEmails: body.clientNotifyEmails || [],
+      },
+      include: { vehicle: true, driver: true },
+    });
 
-  // 作成ログ
-  await prisma.dispatchLog.create({
-    data: {
-      dispatchId: dispatch.id,
-      action: "CREATE",
-      afterData: JSON.parse(JSON.stringify(dispatch)),
-    },
-  });
+    // 作成ログ
+    await prisma.dispatchLog.create({
+      data: {
+        dispatchId: dispatch.id,
+        action: "CREATE",
+        afterData: JSON.parse(JSON.stringify(dispatch)),
+      },
+    });
 
-  return NextResponse.json(dispatch, { status: 201 });
+    return NextResponse.json(dispatch, { status: 201 });
+  } catch (e: unknown) {
+    console.error("Dispatch creation error:", e);
+    const message = e instanceof Error ? e.message : "保存に失敗しました";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

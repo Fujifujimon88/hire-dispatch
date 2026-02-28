@@ -189,7 +189,7 @@ export function DispatchForm({
       <div className="p-5 md:p-7">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold font-serif text-navy">
-            {editItem ? "手配書を編集" : "確定案件 - 新規手配書"}
+            {editItem ? "手配書を編集" : "確定案件 - 新規発注依頼"}
           </h3>
           {!editItem && lastSaved && (
             <Button
