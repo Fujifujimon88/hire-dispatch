@@ -209,7 +209,7 @@ export function DispatchForm({
 
         {/* 基本情報 */}
         <SectionHeader icon={<FileText className="w-4 h-4" />} label="基本情報" />
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+        <div className={`grid grid-cols-1 ${isInternal ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-4 mb-8`}>
           <Field label="注文番号" required>
             <Input value={f.orderNumber} onChange={e => set({ orderNumber: e.target.value })} placeholder="JP26-0295" className="font-mono text-sm" />
           </Field>
@@ -219,10 +219,8 @@ export function DispatchForm({
           <Field label="手配日" required>
             <Input type="date" value={f.arrangementDate} onChange={e => set({ arrangementDate: e.target.value })} />
           </Field>
-          <Field label="クライアント">
-            {!isInternal ? (
-              <div className="flex h-10 items-center px-3 text-sm bg-gray-100 rounded-md border text-gray-600">{clientSlug?.toUpperCase()}（固定）</div>
-            ) : (
+          {isInternal && (
+            <Field label="クライアント">
               <select
                 value={f.dispatchType}
                 onChange={e => set({ dispatchType: e.target.value as "BOJ" | "OTHER" })}
@@ -231,8 +229,8 @@ export function DispatchForm({
                 <option value="BOJ">BOJ</option>
                 <option value="OTHER">その他</option>
               </select>
-            )}
-          </Field>
+            </Field>
+          )}
         </div>
 
         {/* 配車情報 */}
@@ -290,8 +288,8 @@ export function DispatchForm({
           </Field>
         </div>
 
-        {/* 車両 */}
-        <SectionHeader icon={<Car className="w-4 h-4" />} label="車両" />
+        {/* 車両・金額 */}
+        <SectionHeader icon={<Car className="w-4 h-4" />} label="車両・金額" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <Field label="車両選択">
             <select
@@ -307,8 +305,8 @@ export function DispatchForm({
               ))}
             </select>
           </Field>
-          <Field label="車両番号・ドライバー・携帯">
-            <Input value={f.driverInfo} onChange={e => set({ driverInfo: e.target.value })} placeholder="例: 品川300あ1234 / 田中 / 090-xxxx-xxxx" />
+          <Field label="金額（税込）">
+            <Input type="number" min={0} value={f.budgetPriceTaxIncluded} onChange={e => set({ budgetPriceTaxIncluded: e.target.value })} placeholder="例: 50000" className="font-mono" />
           </Field>
         </div>
         <div className="mb-8">
@@ -318,16 +316,20 @@ export function DispatchForm({
         </div>
 
 
-        {/* メール通知設定 */}
-        <SectionHeader icon={<Mail className="w-4 h-4" />} label="メール通知設定" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <Field label="社内通知先（カンマ区切り）">
-            <Textarea value={f.internalNotifyEmails} onChange={e => set({ internalNotifyEmails: e.target.value })} placeholder="user1@example.com, user2@example.com" rows={2} />
-          </Field>
-          <Field label="顧客通知先（カンマ区切り）">
-            <Textarea value={f.clientNotifyEmails} onChange={e => set({ clientNotifyEmails: e.target.value })} placeholder="client@example.com" rows={2} />
-          </Field>
-        </div>
+        {/* メール通知設定（社内のみ表示） */}
+        {isInternal && (
+          <>
+            <SectionHeader icon={<Mail className="w-4 h-4" />} label="メール通知設定" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <Field label="社内通知先（カンマ区切り）">
+                <Textarea value={f.internalNotifyEmails} onChange={e => set({ internalNotifyEmails: e.target.value })} placeholder="user1@example.com, user2@example.com" rows={2} />
+              </Field>
+              <Field label="顧客通知先（カンマ区切り）">
+                <Textarea value={f.clientNotifyEmails} onChange={e => set({ clientNotifyEmails: e.target.value })} placeholder="client@example.com" rows={2} />
+              </Field>
+            </div>
+          </>
+        )}
 
         {/* Messages */}
         {err && <div className="text-red-600 text-sm mb-3 flex items-center gap-1.5">{err}</div>}
