@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const dispatch = await prisma.dispatch.findUnique({
     where: { id: params.id },
-    include: { vehicle: true, driver: true },
+    include: { vehicle: true, driver: true, client: true },
   });
   if (!dispatch) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(dispatch);
@@ -16,7 +16,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   // 更新前のデータを取得（ログ用）
   const before = await prisma.dispatch.findUnique({
     where: { id: params.id },
-    include: { vehicle: true, driver: true },
+    include: { vehicle: true, driver: true, client: true },
   });
   if (!before) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -48,11 +48,12 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   if (body.driverInfo !== undefined) data.driverInfo = body.driverInfo || null;
   if (body.internalNotifyEmails !== undefined) data.internalNotifyEmails = body.internalNotifyEmails;
   if (body.clientNotifyEmails !== undefined) data.clientNotifyEmails = body.clientNotifyEmails;
+  if (body.clientId !== undefined) data.clientId = body.clientId || null;
 
   const dispatch = await prisma.dispatch.update({
     where: { id: params.id },
     data,
-    include: { vehicle: true, driver: true },
+    include: { vehicle: true, driver: true, client: true },
   });
 
   // 変更履歴を記録
@@ -71,7 +72,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const before = await prisma.dispatch.findUnique({
     where: { id: params.id },
-    include: { vehicle: true, driver: true },
+    include: { vehicle: true, driver: true, client: true },
   });
 
   if (before) {

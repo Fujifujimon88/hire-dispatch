@@ -4,6 +4,7 @@ import { translations, Lang } from "@/lib/i18n";
 import { api, Reservation, User } from "@/lib/shared";
 import { cn } from "@/lib/utils";
 import { VehicleCrud, GradeCrud, DriverCrud, LocationCrud } from "@/components/CrudComponents";
+import { ClientManagement } from "@/components/ClientManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -167,7 +168,7 @@ function AdminViewContent({ t, lang, user }: { t: any; lang: string; user: User 
     } catch (e: any) { alert(e.message || "Failed to issue invoice"); }
   };
 
-  const tabs = [["res",t.reservations],["veh",t.vehicles],["grd",t.grades],["drv",t.driversTab],["loc",t.locationsTab],["inv",t.invoices]];
+  const tabs = [["res",t.reservations],["veh",t.vehicles],["grd",t.grades],["drv",t.driversTab],["loc",t.locationsTab],["inv",t.invoices],["cli","クライアント"]];
 
   return (
     <div className="max-w-[1100px] mx-auto py-8 px-5">
@@ -223,6 +224,8 @@ function AdminViewContent({ t, lang, user }: { t: any; lang: string; user: User 
       {tab==="grd" && <GradeCrud t={t} grades={grades} onRefresh={loadGrades} />}
       {tab==="drv" && <DriverCrud t={t} drivers={drivers} onRefresh={loadDrivers} />}
       {tab==="loc" && <LocationCrud t={t} locations={locations} onRefresh={loadLocations} />}
+
+      {tab==="cli" && <ClientManagement />}
 
       {tab==="inv" && (
         <Card className="overflow-auto">

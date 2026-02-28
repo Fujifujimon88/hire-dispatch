@@ -8,14 +8,25 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const month = searchParams.get("month");
+  const clientSlug = searchParams.get("clientSlug");
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
   if (month) where.arrangementMonth = month;
 
+  // テナントフィルタリング
+  if (clientSlug) {
+    const client = await prisma.dispatchClient.findUnique({
+      where: { slug: clientSlug },
+    });
+    if (client) {
+      where.clientId = client.id;
+    }
+  }
+
   const dispatches = await prisma.dispatch.findMany({
     where,
-    include: { vehicle: true, driver: true },
+    include: { vehicle: true, driver: true, client: true },
     orderBy: { arrangementDate: "desc" },
   });
   return NextResponse.json(dispatches);
@@ -24,6 +35,15 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    // clientSlug → clientId 解決
+    let clientId: string | null = null;
+    if (body.clientSlug) {
+      const client = await prisma.dispatchClient.findUnique({
+        where: { slug: body.clientSlug },
+      });
+      if (client) clientId = client.id;
+    }
 
     const dispatch = await prisma.dispatch.create({
       data: {
@@ -50,8 +70,9 @@ export async function POST(req: Request) {
         driverInfo: body.driverInfo || null,
         internalNotifyEmails: body.internalNotifyEmails || [],
         clientNotifyEmails: body.clientNotifyEmails || [],
+        clientId,
       },
-      include: { vehicle: true, driver: true },
+      include: { vehicle: true, driver: true, client: true },
     });
 
     // 作成ログ

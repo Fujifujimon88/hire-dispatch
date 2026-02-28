@@ -10,7 +10,8 @@ import {
   ClipboardList, MessageSquare, ChevronRight,
 } from "lucide-react";
 
-export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }) {
+export function DispatchApp({ clientSlug, clientName }: { clientSlug?: string; clientName?: string } = {}) {
+  const isInternal = !clientSlug;
   const [tab, setTab] = useState<"confirmed" | "consultation">("confirmed");
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -20,10 +21,11 @@ export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }
 
   const loadDispatches = useCallback(async () => {
     try {
-      const res = await fetch("/api/dispatches");
+      const params = clientSlug ? `?clientSlug=${clientSlug}` : "";
+      const res = await fetch(`/api/dispatches${params}`);
       if (res.ok) setDispatches(await res.json());
     } catch { /* ignore */ }
-  }, []);
+  }, [clientSlug]);
 
   const loadConsultations = useCallback(async () => {
     try {
@@ -84,6 +86,7 @@ export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }
       notes: c.consultationDetails,
       status: "CONFIRMED",
       calendarEventId: null,
+      clientId: null,
       dispatchType: "OTHER",
       sheetRowNumber: null,
       pdfFileId: null,
@@ -114,10 +117,10 @@ export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }
           </div>
           <div>
             <div className="text-sm font-bold tracking-widest font-serif">
-              {mode === "boj" ? "BOJ 発注依頼" : "手配書管理"}
+              {isInternal ? "手配書管理" : `${clientName || clientSlug} 発注依頼`}
             </div>
             <div className="text-[10px] text-gray-400 tracking-wider">
-              {mode === "boj" ? "BOJ ORDER REQUEST" : "DISPATCH MANAGEMENT"}
+              {isInternal ? "DISPATCH MANAGEMENT" : "ORDER REQUEST"}
             </div>
           </div>
         </a>
@@ -185,7 +188,7 @@ export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }
               editItem={editDispatch}
               onSaved={() => { loadDispatches(); setEditDispatch(null); }}
               onCancel={() => setEditDispatch(null)}
-              mode={mode}
+              clientSlug={clientSlug}
             />
             <DispatchTable
               dispatches={dispatches}

@@ -70,14 +70,15 @@ function Field({ label, required, children }: { label: string; required?: boolea
 const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer";
 
 export function DispatchForm({
-  vehicles, editItem, onSaved, onCancel, mode = "internal",
+  vehicles, editItem, onSaved, onCancel, clientSlug,
 }: {
   vehicles: Vehicle[];
   editItem: Dispatch | null;
   onSaved: () => void;
   onCancel: () => void;
-  mode?: "internal" | "boj";
+  clientSlug?: string;
 }) {
+  const isInternal = !clientSlug;
   const [f, setF] = useState<DForm>(empty);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
@@ -130,6 +131,7 @@ export function DispatchForm({
         ...f,
         internalNotifyEmails: f.internalNotifyEmails ? f.internalNotifyEmails.split(",").map(s => s.trim()).filter(Boolean) : [],
         clientNotifyEmails: f.clientNotifyEmails ? f.clientNotifyEmails.split(",").map(s => s.trim()).filter(Boolean) : [],
+        ...(clientSlug && { clientSlug }),
       };
 
       const url = editItem ? `/api/dispatches/${editItem.id}` : "/api/dispatches";
@@ -190,7 +192,7 @@ export function DispatchForm({
       <div className="p-5 md:p-7">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold font-serif text-navy">
-            {editItem ? "手配書を編集" : mode === "boj" ? "確定案件 - 新規発注依頼" : "確定案件 - 新規手配書"}
+            {editItem ? "手配書を編集" : isInternal ? "確定案件 - 新規手配書" : "確定案件 - 新規発注依頼"}
           </h3>
           {!editItem && lastSaved && (
             <Button
@@ -217,9 +219,9 @@ export function DispatchForm({
           <Field label="手配日" required>
             <Input type="date" value={f.arrangementDate} onChange={e => set({ arrangementDate: e.target.value })} />
           </Field>
-          <Field label="種別">
-            {mode === "boj" ? (
-              <div className="flex h-10 items-center px-3 text-sm bg-gray-100 rounded-md border text-gray-600">BOJ（固定）</div>
+          <Field label="クライアント">
+            {!isInternal ? (
+              <div className="flex h-10 items-center px-3 text-sm bg-gray-100 rounded-md border text-gray-600">{clientSlug?.toUpperCase()}（固定）</div>
             ) : (
               <select
                 value={f.dispatchType}

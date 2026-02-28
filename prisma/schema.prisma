@@ -228,6 +228,39 @@ model InvoiceItem {
 // 新規モデル (hire-dispatch 固有)
 // ══════════════════════════════════════
 
+// ── クライアント（SaaS マルチテナント） ──
+model DispatchClient {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+
+  // Google連携（null = 環境変数のデフォルト値を使用）
+  calendarId    String? @map("calendar_id")
+  spreadsheetId String? @map("spreadsheet_id")
+  dataSheetName String? @map("data_sheet_name")
+  pdfSheetName  String? @map("pdf_sheet_name")
+  driveFolderId String? @map("drive_folder_id")
+
+  // シート列マッピング種別
+  mappingType String @default("BOJ") @map("mapping_type")
+
+  // 通知デフォルト
+  defaultInternalEmails String[] @default([]) @map("default_internal_emails")
+  defaultClientEmails   String[] @default([]) @map("default_client_emails")
+
+  // 表示カスタマイズ
+  headerTitle    String? @map("header_title")
+  headerSubtitle String? @map("header_subtitle")
+
+  dispatches    Dispatch[]
+  consultations Consultation[]
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("dispatch_clients")
+}
+
 // ── 手配書 ──
 model Dispatch {
   id               String         @id @default(uuid())
@@ -252,6 +285,10 @@ model Dispatch {
   status           DispatchStatus @default(CONFIRMED)
   calendarEventId  String?        @map("calendar_event_id")
 
+  // マルチテナント
+  clientId         String?        @map("client_id")
+  client           DispatchClient? @relation(fields: [clientId], references: [id])
+
   // Sheets / PDF / Email 連携フィールド
   dispatchType           DispatchType @default(OTHER) @map("dispatch_type")
   sheetRowNumber         Int?         @map("sheet_row_number")
@@ -270,6 +307,7 @@ model Dispatch {
   @@index([orderNumber])
   @@index([arrangementDate])
   @@index([status])
+  @@index([clientId])
   @@map("dispatches")
 }
 
@@ -310,11 +348,17 @@ model Consultation {
   status              ConsultationStatus @default(CONSULTING)
   assignedTo          String?            @map("assigned_to")
   notes               String?            @db.Text
+
+  // マルチテナント
+  clientId            String?            @map("client_id")
+  client              DispatchClient?    @relation(fields: [clientId], references: [id])
+
   createdAt           DateTime           @default(now()) @map("created_at")
   updatedAt           DateTime           @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([createdAt])
+  @@index([clientId])
   @@map("consultations")
 }
 

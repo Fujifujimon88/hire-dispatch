@@ -42,6 +42,9 @@ export type Dispatch = {
   notes: string | null;
   status: string;
   calendarEventId: string | null;
+  // マルチテナント
+  clientId: string | null;
+  client?: { id: string; slug: string; name: string } | null;
   // Sheets / PDF / Email 連携
   dispatchType: "BOJ" | "OTHER";
   sheetRowNumber: number | null;
