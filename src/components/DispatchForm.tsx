@@ -70,12 +70,13 @@ function Field({ label, required, children }: { label: string; required?: boolea
 const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer";
 
 export function DispatchForm({
-  vehicles, editItem, onSaved, onCancel,
+  vehicles, editItem, onSaved, onCancel, mode = "internal",
 }: {
   vehicles: Vehicle[];
   editItem: Dispatch | null;
   onSaved: () => void;
   onCancel: () => void;
+  mode?: "internal" | "boj";
 }) {
   const [f, setF] = useState<DForm>(empty);
   const [submitting, setSubmitting] = useState(false);
@@ -189,7 +190,7 @@ export function DispatchForm({
       <div className="p-5 md:p-7">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold font-serif text-navy">
-            {editItem ? "手配書を編集" : "確定案件 - 新規発注依頼"}
+            {editItem ? "手配書を編集" : mode === "boj" ? "確定案件 - 新規発注依頼" : "確定案件 - 新規手配書"}
           </h3>
           {!editItem && lastSaved && (
             <Button
@@ -215,6 +216,20 @@ export function DispatchForm({
           </Field>
           <Field label="手配日" required>
             <Input type="date" value={f.arrangementDate} onChange={e => set({ arrangementDate: e.target.value })} />
+          </Field>
+          <Field label="種別">
+            {mode === "boj" ? (
+              <div className="flex h-10 items-center px-3 text-sm bg-gray-100 rounded-md border text-gray-600">BOJ（固定）</div>
+            ) : (
+              <select
+                value={f.dispatchType}
+                onChange={e => set({ dispatchType: e.target.value as "BOJ" | "OTHER" })}
+                className={selectClass}
+              >
+                <option value="BOJ">BOJ</option>
+                <option value="OTHER">その他</option>
+              </select>
+            )}
           </Field>
         </div>
 

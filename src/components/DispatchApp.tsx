@@ -10,7 +10,7 @@ import {
   ClipboardList, MessageSquare, ChevronRight,
 } from "lucide-react";
 
-export function DispatchApp() {
+export function DispatchApp({ mode = "internal" }: { mode?: "internal" | "boj" }) {
   const [tab, setTab] = useState<"confirmed" | "consultation">("confirmed");
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -113,8 +113,12 @@ export function DispatchApp() {
             H
           </div>
           <div>
-            <div className="text-sm font-bold tracking-widest font-serif">手配書管理</div>
-            <div className="text-[10px] text-gray-400 tracking-wider">DISPATCH MANAGEMENT</div>
+            <div className="text-sm font-bold tracking-widest font-serif">
+              {mode === "boj" ? "BOJ 発注依頼" : "手配書管理"}
+            </div>
+            <div className="text-[10px] text-gray-400 tracking-wider">
+              {mode === "boj" ? "BOJ ORDER REQUEST" : "DISPATCH MANAGEMENT"}
+            </div>
           </div>
         </a>
         <div className="flex items-center gap-3" />
@@ -181,6 +185,7 @@ export function DispatchApp() {
               editItem={editDispatch}
               onSaved={() => { loadDispatches(); setEditDispatch(null); }}
               onCancel={() => setEditDispatch(null)}
+              mode={mode}
             />
             <DispatchTable
               dispatches={dispatches}
