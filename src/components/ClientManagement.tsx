@@ -23,6 +23,7 @@ export function ClientManagement() {
   const [name, setName] = useState("");
   const [mappingType, setMappingType] = useState("OTHER");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const loadClients = useCallback(async () => {
     try {
@@ -38,6 +39,7 @@ export function ClientManagement() {
   async function handleAdd() {
     if (!slug.trim() || !name.trim()) return;
     setSaving(true);
+    setError("");
     try {
       const res = await fetch("/api/dispatch-clients", {
         method: "POST",
@@ -49,8 +51,13 @@ export function ClientManagement() {
         setName("");
         setMappingType("OTHER");
         loadClients();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `エラー (${res.status})`);
       }
-    } catch { /* ignore */ }
+    } catch {
+      setError("通信エラーが発生しました");
+    }
     setSaving(false);
   }
 
@@ -113,6 +120,11 @@ export function ClientManagement() {
               追加
             </Button>
           </div>
+          {error && (
+            <div className="mt-3 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
+              {error}
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -19,22 +19,35 @@ export async function POST(req: Request) {
     );
   }
 
-  const client = await prisma.dispatchClient.create({
-    data: {
-      slug: body.slug,
-      name: body.name,
-      mappingType: body.mappingType || "BOJ",
-      headerTitle: body.headerTitle || null,
-      headerSubtitle: body.headerSubtitle || null,
-      calendarId: body.calendarId || null,
-      spreadsheetId: body.spreadsheetId || null,
-      dataSheetName: body.dataSheetName || null,
-      pdfSheetName: body.pdfSheetName || null,
-      driveFolderId: body.driveFolderId || null,
-      defaultInternalEmails: body.defaultInternalEmails || [],
-      defaultClientEmails: body.defaultClientEmails || [],
-    },
-  });
+  try {
+    const client = await prisma.dispatchClient.create({
+      data: {
+        slug: body.slug,
+        name: body.name,
+        mappingType: body.mappingType || "BOJ",
+        headerTitle: body.headerTitle || null,
+        headerSubtitle: body.headerSubtitle || null,
+        calendarId: body.calendarId || null,
+        spreadsheetId: body.spreadsheetId || null,
+        dataSheetName: body.dataSheetName || null,
+        pdfSheetName: body.pdfSheetName || null,
+        driveFolderId: body.driveFolderId || null,
+        defaultInternalEmails: body.defaultInternalEmails || [],
+        defaultClientEmails: body.defaultClientEmails || [],
+      },
+    });
 
-  return NextResponse.json(client, { status: 201 });
+    return NextResponse.json(client, { status: 201 });
+  } catch (e: any) {
+    if (e?.code === "P2002") {
+      return NextResponse.json(
+        { error: `slug "${body.slug}" は既に使用されています` },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json(
+      { error: e?.message || "作成に失敗しました" },
+      { status: 500 }
+    );
+  }
 }
